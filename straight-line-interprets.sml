@@ -8,22 +8,29 @@ and exp = IdExp of id
         | OpExp of exp * binop * exp
         | EseqExp of stm * exp
 
-(* maxargs returns the maximum number of argument of any print statement
-within any subexpression of a given statement. *)
-fun maxargs_old (PrintStm s) = List.length s
-  | maxargs_old (AssignStm(_, exp)) = maxargs_exp exp
-  | maxargs_old (CompoundStm(stm1, stm2)) = Int.max(maxargs_old stm1, maxargs_old stm2)
-and maxargs_exp (EseqExp(stm, exp)) = Int.max(maxargs_old stm, maxargs_exp exp) (* mutual recursive by and *)
-  | maxargs_exp (OpExp(exp1, _, exp2)) =
-    Int.max(maxargs_exp exp1, maxargs_exp exp2)
-  | maxargs_exp (_) = 0
-
-(* maxargs returns the maximum number of argument of any print statement
-within any subexpression of a given statement. *)
-fun maxargs (PrintStm s) = List.length s
+fun maxargs (PrintStm ([])) = 0
+  | maxargs (PrintStm (EseqExp(stm, exp)::ns)) =
+    let val ec1 = List.length ns + 1
+        val ec2 = maxargs stm
+        val ec3 = maxargs(PrintStm(ns))
+    in
+        if ec1 > ec2 then
+            if ec1 > ec3 then ec1 else ec3
+        else if ec2 > ec3 then ec2 else ec3
+    end
+  | maxargs (PrintStm (OpExp(exp1,_,EseqExp(stm, exp2))::ns)) =
+    let val ec1 = List.length ns + 1
+        val ec2 = maxargs stm
+        val ec3 = maxargs(PrintStm(ns))
+    in
+        if ec1 > ec2 then
+            if ec1 > ec3 then ec1 else ec3
+        else if ec2 > ec3 then ec2 else ec3
+    end
+  | maxargs (PrintStm (s::ns)) = Int.max(List.length ns + 1, maxargs(PrintStm(ns)))
+  | maxargs (CompoundStm (stm1, stm2)) = Int.max(maxargs stm1, maxargs stm2)
   | maxargs (AssignStm(_, (EseqExp(stm, exp)))) = maxargs stm
   | maxargs (AssignStm(_, _)) = 0
-  | maxargs (CompoundStm(stm1, stm2)) = Int.max(maxargs stm1, maxargs stm2)
 
 (* test maxargs *)
 val prog1 =
@@ -32,3 +39,22 @@ val prog1 =
         EseqExp(PrintStm[IdExp"a",OpExp(IdExp"a", Minus, NumExp 1)],
           OpExp(NumExp 10, Times, IdExp"a"))),
       PrintStm[IdExp "b"]))
+val prog2 = PrintStm[IdExp"a"]
+val prog3 = PrintStm[IdExp"a",
+                     OpExp(IdExp"a", Minus, NumExp 1),
+                     EseqExp(PrintStm[IdExp"a",
+                                      IdExp"b",
+                                      IdExp"c",
+                                      IdExp"d"],IdExp("a"))]
+
+val prog4 = PrintStm[IdExp"a",
+                     OpExp(IdExp"a", Minus,
+                           EseqExp(PrintStm[IdExp"a",
+                                            IdExp"b",
+                                            IdExp"c",
+                                            IdExp"d",
+                                            IdExp"e"],IdExp("2"))),
+                     EseqExp(PrintStm[IdExp"a",
+                                      IdExp"b",
+                                      IdExp"c",
+                                      IdExp"d"],IdExp("a"))]
