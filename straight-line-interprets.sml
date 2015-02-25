@@ -9,28 +9,21 @@ and exp = IdExp of id
         | EseqExp of stm * exp
 
 fun maxargs (PrintStm ([])) = 0
-  | maxargs (PrintStm (EseqExp(stm, exp)::ns)) =
+  | maxargs (PrintStm (n::ns)) =
     let val ec1 = List.length ns + 1
-        val ec2 = maxargs stm
+        val ec2 = maxargs_exp n
         val ec3 = maxargs(PrintStm(ns))
     in
         if ec1 > ec2 then
             if ec1 > ec3 then ec1 else ec3
         else if ec2 > ec3 then ec2 else ec3
     end
-  | maxargs (PrintStm (OpExp(exp1,_,EseqExp(stm, exp2))::ns)) =
-    let val ec1 = List.length ns + 1
-        val ec2 = maxargs stm
-        val ec3 = maxargs(PrintStm(ns))
-    in
-        if ec1 > ec2 then
-            if ec1 > ec3 then ec1 else ec3
-        else if ec2 > ec3 then ec2 else ec3
-    end
-  | maxargs (PrintStm (s::ns)) = Int.max(List.length ns + 1, maxargs(PrintStm(ns)))
   | maxargs (CompoundStm (stm1, stm2)) = Int.max(maxargs stm1, maxargs stm2)
   | maxargs (AssignStm(_, (EseqExp(stm, exp)))) = maxargs stm
   | maxargs (AssignStm(_, _)) = 0
+and maxargs_exp (EseqExp(stm,exp)) = Int.max(maxargs stm, maxargs_exp exp)
+  | maxargs_exp (OpExp(exp1,_,exp2)) = Int.max(maxargs_exp exp1, maxargs_exp exp2)
+  | maxargs_exp (_) = 0
 
 (* test maxargs *)
 val prog1 =
@@ -49,6 +42,24 @@ val prog3 = PrintStm[IdExp"a",
 
 val prog4 = PrintStm[IdExp"a",
                      OpExp(IdExp"a", Minus,
+                           EseqExp(PrintStm[IdExp"a",
+                                            IdExp"b",
+                                            IdExp"c",
+                                            IdExp"d",
+                                            IdExp"e"],IdExp("2"))),
+                     EseqExp(PrintStm[IdExp"a",
+                                      IdExp"b",
+                                      IdExp"c",
+                                      IdExp"d"],IdExp("a"))]
+
+val prog5 = PrintStm[IdExp"a",
+                     OpExp(EseqExp(PrintStm[IdExp"a",
+                                            IdExp"b",
+                                            IdExp"c",
+                                            IdExp"d",
+                                            IdExp"e",
+                                            IdExp"f"],IdExp("2")),
+                           Minus,
                            EseqExp(PrintStm[IdExp"a",
                                             IdExp"b",
                                             IdExp"c",
