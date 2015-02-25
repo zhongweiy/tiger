@@ -25,14 +25,18 @@ and maxargs_exp (EseqExp(stm,exp)) = Int.max(maxargs stm, maxargs_exp exp)
   | maxargs_exp (OpExp(exp1,_,exp2)) = Int.max(maxargs_exp exp1, maxargs_exp exp2)
   | maxargs_exp (_) = 0
 
-(* test maxargs *)
+(* test maxargs. *)
+(* TODO add unit test *)
+(* maxargs prog1 should return 2 *)
 val prog1 =
     CompoundStm(AssignStm("a",OpExp(NumExp 5, Plus, NumExp 3)),
       CompoundStm(AssignStm("b",
         EseqExp(PrintStm[IdExp"a",OpExp(IdExp"a", Minus, NumExp 1)],
           OpExp(NumExp 10, Times, IdExp"a"))),
       PrintStm[IdExp "b"]))
+(* maxargs prog2 should return 1 *)
 val prog2 = PrintStm[IdExp"a"]
+(* maxargs prog3 should return 4 *)
 val prog3 = PrintStm[IdExp"a",
                      OpExp(IdExp"a", Minus, NumExp 1),
                      EseqExp(PrintStm[IdExp"a",
@@ -40,6 +44,7 @@ val prog3 = PrintStm[IdExp"a",
                                       IdExp"c",
                                       IdExp"d"],IdExp("a"))]
 
+(* maxargs prog4 should return 5 *)
 val prog4 = PrintStm[IdExp"a",
                      OpExp(IdExp"a", Minus,
                            EseqExp(PrintStm[IdExp"a",
@@ -52,6 +57,7 @@ val prog4 = PrintStm[IdExp"a",
                                       IdExp"c",
                                       IdExp"d"],IdExp("a"))]
 
+(* maxargs prog5 should return 6 *)
 val prog5 = PrintStm[IdExp"a",
                      OpExp(EseqExp(PrintStm[IdExp"a",
                                             IdExp"b",
