@@ -122,4 +122,4 @@ val prog6 =
                                       EseqExp(PrintStm[IdExp"a",OpExp(IdExp"a", Minus, NumExp 1)],
                                               OpExp(NumExp 10, Times, IdExp"a"))),
                             AssignStm("b",OpExp(NumExp 16, Div, NumExp 5))))
-(* TODO unittest: interp prog6 return val it = [("b",34),("b",80),("a",8)] : (id * int) list *)
+(* TODO unittest: interp prog6 return val it = [("b",3),("b",80),("a",8)] : (id * int) list *)
