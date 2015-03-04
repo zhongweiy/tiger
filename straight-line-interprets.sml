@@ -105,8 +105,10 @@ fun interp (stm)=
           let val p1 = interpExp(exp1, table)
               val p2 = interpExp(exp2, (#2 p1))
           in ((#1 p1) * (#1 p2), (#2 p2)) end
-        (* TODO add div opt here, directly add div as '/' not work, because '/' 's *)
-        (* operand is real *)
+        | interpExp (OpExp (exp1, Div, exp2), table) =
+          let val p1 = interpExp(exp1, table)
+              val p2 = interpExp(exp2, (#2 p1))
+          in ((#1 p1) div (#1 p2), (#2 p2)) end              
         | interpExp (IdExp (id), table) = (lookup(id, table), table)
         | interpExp (NumExp (n), table) = (n, table)
         | interpExp (EseqExp (stm, exp), table) = interpExp(exp, interpStm(stm, table))
@@ -119,5 +121,5 @@ val prog6 =
                 CompoundStm(AssignStm("b",
                                       EseqExp(PrintStm[IdExp"a",OpExp(IdExp"a", Minus, NumExp 1)],
                                               OpExp(NumExp 10, Times, IdExp"a"))),
-                            AssignStm("b",NumExp 34)))
+                            AssignStm("b",OpExp(NumExp 16, Div, NumExp 5))))
 (* TODO unittest: interp prog6 return val it = [("b",34),("b",80),("a",8)] : (id * int) list *)
