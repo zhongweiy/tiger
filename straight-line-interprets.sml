@@ -79,7 +79,7 @@ val prog5 = PrintStm[IdExp"a",
 (* stm->table *)
 fun interp (stm)=
   let (* id x table -> int *)
-      fun lookup (id, ([])) = 0 (* TODO use null? *)
+      fun lookup (id, ([])) = 0 (* TODO use null or raise exception. *)
         | lookup (id, (n::ns) : (string * int) list) =
           if id = (#1 n) then (#2 n) else lookup(id, ns)
 
@@ -123,3 +123,5 @@ val prog6 =
                                               OpExp(NumExp 10, Times, IdExp"a"))),
                             AssignStm("b",OpExp(NumExp 16, Div, NumExp 5))))
 (* TODO unittest: interp prog6 return val it = [("b",3),("b",80),("a",8)] : (id * int) list *)
+
+val prog7 = AssignStm("a",OpExp(IdExp "a", Plus, NumExp 3))
