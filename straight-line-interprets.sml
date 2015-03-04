@@ -75,3 +75,49 @@ val prog5 = PrintStm[IdExp"a",
                                       IdExp"b",
                                       IdExp"c",
                                       IdExp"d"],IdExp("a"))]
+
+(* stm->table *)
+fun interp (stm)=
+  let (* id x table -> int *)
+      fun lookup (id, ([])) = 0 (* TODO use null? *)
+        | lookup (id, (n::ns) : (string * int) list) =
+          if id = (#1 n) then (#2 n) else lookup(id, ns)
+
+      (* stm x table -> table *)
+      fun interpStm (CompoundStm (stm1, stm2), table) = interpStm(stm2, interpStm(stm1, table))
+        | interpStm (AssignStm (id, exp), table) =
+          let val p = interpExp(exp, table)
+          in (id, (#1 p))::(#2 p) end
+        | interpStm (PrintStm ([]), table) = table
+        | interpStm (PrintStm (n::ns), table) = interpStm(PrintStm(ns), (#2 (interpExp(n, table))))
+
+      (* exp x table -> int x table *)
+      and interpExp (OpExp (exp1, Plus, exp2), table) =
+          let val p1 = interpExp(exp1, table)
+              val p2 = interpExp(exp2, (#2 p1))
+          in ((#1 p1) + (#1 p2), (#2 p2)) end
+        (* TODO simplify opt here *)
+        | interpExp (OpExp (exp1, Minus, exp2), table) =
+          let val p1 = interpExp(exp1, table)
+              val p2 = interpExp(exp2, (#2 p1))
+          in ((#1 p1) - (#1 p2), (#2 p2)) end
+        | interpExp (OpExp (exp1, Times, exp2), table) =
+          let val p1 = interpExp(exp1, table)
+              val p2 = interpExp(exp2, (#2 p1))
+          in ((#1 p1) * (#1 p2), (#2 p2)) end
+        (* TODO add div opt here, directly add div as '/' not work, because '/' 's *)
+        (* operand is real *)
+        | interpExp (IdExp (id), table) = (lookup(id, table), table)
+        | interpExp (NumExp (n), table) = (n, table)
+        | interpExp (EseqExp (stm, exp), table) = interpExp(exp, interpStm(stm, table))
+  in interpStm(stm, []) end
+
+(* TODO unit test here: interp prog1; return val it = [("b",80),("a",8)] : (id * int) list *)
+
+val prog6 =
+    CompoundStm(AssignStm("a",OpExp(NumExp 5, Plus, NumExp 3)),
+                CompoundStm(AssignStm("b",
+                                      EseqExp(PrintStm[IdExp"a",OpExp(IdExp"a", Minus, NumExp 1)],
+                                              OpExp(NumExp 10, Times, IdExp"a"))),
+                            AssignStm("b",NumExp 34)))
+(* TODO unittest: interp prog6 return val it = [("b",34),("b",80),("a",8)] : (id * int) list *)
