@@ -43,3 +43,5 @@ fun lookup(key,LEAF) = 0
 val rt = LEAF
 val tr1 = insert2("b",2,insert2("a",1,rt))
 val it = lookup("b",tr1)                 
+
+(* TODO refer Sedgewick's Algorithms book and work out a balance tree *)
