@@ -92,23 +92,17 @@ fun interp (stm)=
         | interpStm (PrintStm (n::ns), table) = interpStm(PrintStm(ns), (#2 (interpExp(n, table))))
 
       (* exp x table -> int x table *)
-      and interpExp (OpExp (exp1, Plus, exp2), table) =
+      and interpExp (OpExp (exp1, opt, exp2), table) =
           let val p1 = interpExp(exp1, table)
               val p2 = interpExp(exp2, (#2 p1))
-          in ((#1 p1) + (#1 p2), (#2 p2)) end
-        (* TODO simplify opt here *)
-        | interpExp (OpExp (exp1, Minus, exp2), table) =
-          let val p1 = interpExp(exp1, table)
-              val p2 = interpExp(exp2, (#2 p1))
-          in ((#1 p1) - (#1 p2), (#2 p2)) end
-        | interpExp (OpExp (exp1, Times, exp2), table) =
-          let val p1 = interpExp(exp1, table)
-              val p2 = interpExp(exp2, (#2 p1))
-          in ((#1 p1) * (#1 p2), (#2 p2)) end
-        | interpExp (OpExp (exp1, Div, exp2), table) =
-          let val p1 = interpExp(exp1, table)
-              val p2 = interpExp(exp2, (#2 p1))
-          in ((#1 p1) div (#1 p2), (#2 p2)) end              
+          in
+              case opt of
+                  (* TODO remove the redundant code here *)
+                 Plus => ((#1 p1) + (#1 p2), (#2 p2))
+               | Minus => ((#1 p1) - (#1 p2), (#2 p2))
+               | Times => ((#1 p1) * (#1 p2), (#2 p2))
+               | Div => ((#1 p1) div (#1 p2), (#2 p2))
+          end
         | interpExp (IdExp (id), table) = (lookup(id, table), table)
         | interpExp (NumExp (n), table) = (n, table)
         | interpExp (EseqExp (stm, exp), table) = interpExp(exp, interpStm(stm, table))
